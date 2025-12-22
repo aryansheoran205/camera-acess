@@ -1,11 +1,10 @@
-import cv2
 from fastapi import FastAPI
-from fastapi.responses import StreamingResponse
+from fastapi.responses import StreamingResponse, HTMLResponse
+import cv2
 
 app = FastAPI()
 
-# Open USB camera (0 = first camera)
-camera = cv2.VideoCapture(0)
+camera = cv2.VideoCapture(0)  # change index if needed
 
 def gen_frames():
     while True:
@@ -20,9 +19,10 @@ def gen_frames():
                 b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n'
             )
 
-@app.get("/")
-def root():
-    return {"message": "Camera server running"}
+@app.get("/", response_class=HTMLResponse)
+def home():
+    with open("index.html", "r") as f:
+        return f.read()
 
 @app.get("/video")
 def video_feed():
