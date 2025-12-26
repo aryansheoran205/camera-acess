@@ -4,11 +4,12 @@ import cv2
 
 app = FastAPI()
 
+# Open camera
 camera = cv2.VideoCapture(0)
 
-# load detector
+# Load Haar Cascade safely
 detector = cv2.CascadeClassifier(
-    "haarcascade_frontalface_default.xml"
+    cv2.data.haarcascades + "haarcascade_frontalface_default.xml"
 )
 
 def gen_frames():
@@ -17,18 +18,30 @@ def gen_frames():
         if not success:
             break
 
+        # Convert to grayscale
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        objects = detector.detectMultiScale(gray, 1.3, 5)
+        gray = cv2.equalizeHist(gray)
 
-        for (x, y, w, h) in objects:
-            cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 255, 0), 2)
+        # Face detection
+        faces = detector.detectMultiScale(
+            gray,
+            scaleFactor=1.1,
+            minNeighbors=4,
+            minSize=(60, 60)
+        )
 
-        ret, buffer = cv2.imencode('.jpg', frame)
+        # Draw rectangles
+        for (x, y, w, h) in faces:
+            cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
+
+        # Encode frame
+        ret, buffer = cv2.imencode(".jpg", frame)
         frame = buffer.tobytes()
 
+        # MJPEG stream
         yield (
-            b'--frame\r\n'
-            b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n'
+            b"--frame\r\n"
+            b"Content-Type: image/jpeg\r\n\r\n" + frame + b"\r\n"
         )
 
 @app.get("/", response_class=HTMLResponse)
