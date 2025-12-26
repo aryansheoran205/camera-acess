@@ -11,7 +11,7 @@ camera = cv2.VideoCapture(0)
 detector = cv2.CascadeClassifier(
     cv2.data.haarcascades + "haarcascade_frontalface_default.xml"
 )
-
+print("Cascade loaded:", not detector.empty())  # thiiiiss is for kam kara sa ke koni
 def gen_frames():
     while True:
         success, frame = camera.read()
