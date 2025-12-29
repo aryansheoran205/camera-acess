@@ -2,10 +2,30 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Raspberry Pi Camera</title>
+    <title>Raspberry Pi Camera Dashboard</title>
+    <link rel="stylesheet" href="/static/style.css">
 </head>
+
 <body>
-    <h1>Live Camera Feed</h1>
-    <img id="cameraFeed" src="/video" width="640" height="480" />
+    <div class="card">
+        <h1>📷 Live Camera Feed</h1>
+
+        <img id="cameraFeed" src="/video">
+
+        <button onclick="capture()">📸 Capture Image</button>
+
+        <div class="status" id="status"></div>
+    </div>
+
+    <script>
+        function capture() {
+            fetch("/capture")
+                .then(res => res.json())
+                .then(data => {
+                    document.getElementById("status").innerText =
+                        "Saved: " + data.filename;
+                });
+        }
+    </script>
 </body>
 </html>
