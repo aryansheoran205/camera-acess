@@ -10,6 +10,9 @@ app = FastAPI()
 
 # video capture is a class
 camera = cv2.VideoCapture(0)
+if not camera.isOpened():  # check if camera opened successfully
+    print("Error: Camera not accessible")
+
 
 # detector is object and class is cassavuybhahu
 detector = cv2.CascadeClassifier(
@@ -28,7 +31,8 @@ def gen_frames():
     while True:
         success, frame = camera.read()
         if not success:
-            break
+            time.sleep(0.1)  # wait a bit if frame not read
+            continue
 
         # Convert to grayscale
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)  # function
@@ -50,18 +54,25 @@ def gen_frames():
 
         # Encode frame
         ret, buffer = cv2.imencode(".jpg", frame)  # yo jpeg format ma change kara go
-        frame = buffer.tobytes()
+        if not ret:
+            continue
+        frame_bytes = buffer.tobytes()
 
         # MJPEG stream
         yield (
             b"--frame\r\n"
-            b"Content-Type: image/jpeg\r\n\r\n" + frame + b"\r\n"
+            b"Content-Type: image/jpeg\r\n\r\n" + frame_bytes + b"\r\n"
         )
 
 
 @app.get("/", response_class=HTMLResponse)
 def home():
-    return open("index.html").read()
+    # Fix: Ensuring file is read and closed properly to avoid "file busy" errors
+    try:
+        with open("index.html", "r") as f:
+            return f.read()
+    except FileNotFoundError:
+        return "<h1>index.html missing! Create it in the same folder.</h1>"
 
 
 @app.get("/video")
@@ -81,3 +92,8 @@ def capture_image():
     cv2.imwrite(filename, last_frame)
 
     return {"filename": filename}
+
+# Added shutdown to release camera so it works on next run
+@app.on_event("shutdown")
+def shutdown_event():
+    camera.release()
