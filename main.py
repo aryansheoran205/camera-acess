@@ -7,7 +7,6 @@ import time
 
 app = FastAPI()
 
-app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # video capture is a class
 camera = cv2.VideoCapture(0)
@@ -68,7 +67,7 @@ def home():
 @app.get("/video")
 def video_feed():
     return StreamingResponse(
-        gen_frames(),  # ya ek class sa jo grt_frame ka andar ha
+        gen_frames(),            # ya ek class sa jo grt_frame ka andar ha
         media_type="multipart/x-mixed-replace; boundary=frame"
     )
 
