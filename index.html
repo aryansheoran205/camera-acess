@@ -1,31 +1,97 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Raspberry Pi Camera Dashboard</title>
-    <link rel="stylesheet" href="/style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Raspberry Pi Camera Dashboard</title>
+  <style>
+    /* ===== CSS ===== */
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .container {
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+      text-align: center;
+    }
+
+    .video-box {
+      margin: 15px 0;
+    }
+
+    img#cameraFeed {
+      width: 640px;
+      height: 480px;
+      border: 2px solid #ccc;
+      border-radius: 8px;
+    }
+
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+      border: none;
+      border-radius: 6px;
+      background-color: #007bff;
+      color: white;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+
+    .status {
+      margin-top: 10px;
+      font-weight: bold;
+    }
+  </style>
 </head>
 
 <body>
-    <div class="card">
-        <h1>📷 Live Camera Feed</h1>
+  <div class="container">
+    <h1>📷 Live Camera Feed</h1>
 
-        <img id="cameraFeed" src="/video">
-
-        <button onclick="capture()">📸 Capture Image</button>
-
-        <div class="status" id="status"></div>
+    <div class="video-box">
+      <img id="cameraFeed" src="/video" alt="Live Camera Feed">
     </div>
 
-    <script>
-        function capture() {
-            fetch("/capture")
-                .then(res => res.json())
-                .then(data => {
-                    document.getElementById("status").innerText =
-                        "Saved: " + data.filename;
-                });
-        }
-    </script>
+    <button onclick="capture()">📸 Capture Image</button>
+
+    <div class="status" id="status"></div>
+  </div>
+
+  <script>
+    // ===== JavaScript =====
+    function capture() {
+      fetch("/capture")
+        .then(res => res.json())
+        .then(data => {
+          if (data.filename) {
+            document.getElementById("status").innerText = "Saved: " + data.filename;
+          } else if (data.error) {
+            document.getElementById("status").innerText = "Error: " + data.error;
+          }
+        })
+        .catch(() => {
+          document.getElementById("status").innerText = "Error capturing image";
+        });
+    }
+
+    // Optional: reload camera feed every second in case it freezes
+    setInterval(() => {
+      const camera = document.getElementById("cameraFeed");
+      camera.src = "/video?" + new Date().getTime();
+    }, 1000);
+  </script>
 </body>
 </html>
