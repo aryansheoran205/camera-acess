@@ -1,97 +1,101 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Raspberry Pi Camera Dashboard</title>
-  <style>
-    /* ===== CSS ===== */
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #f4f4f4;
-      margin: 0;
-      padding: 0;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-    }
-
-    .container {
-      background-color: #fff;
-      padding: 20px;
-      border-radius: 12px;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-      text-align: center;
-    }
-
-    .video-box {
-      margin: 15px 0;
-    }
-
-    img#cameraFeed {
-      width: 640px;
-      height: 480px;
-      border: 2px solid #ccc;
-      border-radius: 8px;
-    }
-
-    button {
-      padding: 10px 20px;
-      font-size: 16px;
-      cursor: pointer;
-      border: none;
-      border-radius: 6px;
-      background-color: #007bff;
-      color: white;
-    }
-
-    button:hover {
-      background-color: #0056b3;
-    }
-
-    .status {
-      margin-top: 10px;
-      font-weight: bold;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Vision Dashboard</title>
+    <style>
+        :root {
+            --bg-dark: #0f172a;
+            --card-bg: #1e293b;
+            --accent: #10b981;
+            --text: #f8fafc;
+        }
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text);
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .header {
+            width: 100%;
+            padding: 20px;
+            background: var(--card-bg);
+            text-align: center;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+        .container {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+            text-align: center;
+        }
+        .video-wrapper {
+            border: 4px solid #334155;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 20px;
+            background: #000;
+        }
+        img { max-width: 100%; display: block; }
+        .controls { display: flex; justify-content: center; gap: 20px; }
+        .btn-capture {
+            background-color: var(--accent);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            font-size: 18px;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-capture:hover { transform: scale(1.05); background-color: #059669; }
+        .btn-capture:active { transform: scale(0.95); }
+        #status { margin-top: 15px; color: #94a3b8; font-size: 14px; }
+    </style>
 </head>
-
 <body>
-  <div class="container">
-    <h1>📷 Live Camera Feed</h1>
-
-    <div class="video-box">
-      <img id="cameraFeed" src="/video" alt="Live Camera Feed">
+    <div class="header">
+        <h1>AI Vision Dashboard</h1>
     </div>
 
-    <button onclick="capture()">📸 Capture Image</button>
+    <div class="container">
+        <div class="video-wrapper">
+            <img src="/video" alt="Live Stream">
+        </div>
+        
+        <div class="controls">
+            <button class="btn-capture" onclick="takeCapture()">CAPTURE IMAGE</button>
+        </div>
+        <p id="status">Ready</p>
+    </div>
 
-    <div class="status" id="status"></div>
-  </div>
-
-  <script>
-    // ===== JavaScript =====
-    function capture() {
-      fetch("/capture")
-        .then(res => res.json())
-        .then(data => {
-          if (data.filename) {
-            document.getElementById("status").innerText = "Saved: " + data.filename;
-          } else if (data.error) {
-            document.getElementById("status").innerText = "Error: " + data.error;
-          }
-        })
-        .catch(() => {
-          document.getElementById("status").innerText = "Error capturing image";
-        });
-    }
-
-    // Optional: reload camera feed every second in case it freezes
-    setInterval(() => {
-      const camera = document.getElementById("cameraFeed");
-      camera.src = "/video?" + new Date().getTime();
-    }, 1000);
-  </script>
+    <script>
+        async function takeCapture() {
+            const status = document.getElementById('status');
+            status.innerText = "Capturing...";
+            try {
+                const response = await fetch('/capture');
+                const data = await response.json();
+                if(data.filename) {
+                    status.innerText = "Saved: " + data.filename;
+                    status.style.color = "#10b981";
+                } else {
+                    status.innerText = "Capture failed";
+                }
+            } catch (err) {
+                status.innerText = "Error connecting to server";
+                status.style.color = "#ef4444";
+            }
+            setTimeout(() => { status.style.color = "#94a3b8"; }, 3000);
+        }
+    </script>
 </body>
 </html>
